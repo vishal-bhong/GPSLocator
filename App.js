@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
+import axios from 'axios';
 
 import * as Location from 'expo-location';
 
 
 export default function App() {
-  const [location, setLocation] = useState({latitude: 0, longitude: 0,});
+  const [finalLocationCoords, setFinalLocationCoords] = useState({latitude: 0, longitude: 0,});
   const [errorMsg, setErrorMsg] = useState(null);
+
+let latitude1;
+let longitude1;
+let intervalId;
 
   useEffect(() => {
     (async () => {
@@ -18,7 +23,7 @@ export default function App() {
       }
       startLocationUpdates();
     })();
-  }, [location]);
+  }, [finalLocationCoords]);
 
   
   const startLocationUpdates = async () => {
@@ -27,23 +32,39 @@ export default function App() {
       { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 10 },
       (location) => {
         // console.log(location.coords.latitude, location.coords.longitude)
-        setLocation({latitude: location.coords.latitude, longitude: location.coords.longitude});
+        latitude1 = location.coords.latitude;
+        longitude1 = location.coords.longitude;
       }
     );
   };
 
-  let text = 'Waiting..';
-  if (errorMsg) {
-    text = errorMsg;
-  } else if (location) {
-    text = location
+  
+
+const postData = async () => {
+  try {
+    if(finalLocationCoords.latitude !== latitude1 || finalLocationCoords.longitude !== longitude1){
+      setFinalLocationCoords({latitude: latitude1, longitude: longitude1});
+      // console.log(finalLocationCoords)
+      const response = await axios.post('http://192.168.12.125:5000/admin/postCoordinates', finalLocationCoords) 
+      console.log(response.data)   
+      clear_interval()
+    }
+  } catch (error) {
+    console.log(error.message)
   }
+}
+
+intervalId = setInterval(postData, 20000);
+
+const clear_interval = () => {
+  clearInterval(intervalId);
+}
   
   return (
     <>
       <View style={styles.container}>
-        <Text style={styles.loading}>latitude : {text?.latitude}</Text> 
-        <Text style={styles.loading}>longitude : {text?.longitude}</Text>
+        <Text style={styles.loading}>latitude : {finalLocationCoords?.latitude}</Text> 
+        <Text style={styles.loading}>longitude : {finalLocationCoords?.longitude}</Text>
       </View>
       <View style={styles.refresh}>
         <Pressable style={styles.button} onPress={startLocationUpdates}>

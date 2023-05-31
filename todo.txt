@@ -3,3 +3,12 @@
 1)  use bike rental system backend as server.
 2)  post the cooords to this backend server.
 3)  from the server post this coords to the front end application.
+
+
+   axios.post('http://192.168.215.125:5000/admin/postCoordinates', locationCoords)
+      .then(res => {
+        console.log(res.body);
+      })
+      .catch(err => {
+        console.log(err.message);
+      })
